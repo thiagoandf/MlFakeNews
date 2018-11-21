@@ -18,3 +18,7 @@ standardization <- function(x) {
   return ((x - mean(x)) / sd(x))
 }
 
+dataset <-  na.omit(dataset)
+dataset$gender <- ifelse(dataset$gender=='M', 1, 0)
+dataset_norm <- as.data.frame(lapply(dataset, standardization))
+model <- kmeans(dataset_norm, centers = 4)
