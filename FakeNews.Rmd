@@ -7,14 +7,39 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+# Introdução
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Nos foi introduzido, para a realização do trabalho, um dataset contendo dados de 30.000 estudantes aleatórios do ensino médio americano que possuem contas em uma rede social durante o ano de 2006. O nome da rede social foi mantido secreto para preservar a privacidade dos estudantes). Nosso objetivo com esse dataset era realizar a clusterização baseado nos conteúdos dos posts dos usuários.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# Método Utilizado
 
-```{r cars}
-summary(cars)
+## Preparação dos dados
+
+O primeiro foi realizar a leitura dos dados a partir do CSV e entender como estavam organizados.
+
+```{r}
+dataset <- read.csv('snsdata.csv')
+table(dataset$bible)
+table(dataset$basketball)
+table(dataset$sexy)
+table(dataset$rock)
+table(dataset$dress)
+table(dataset$death)
+table(dataset$drugs)
+summary(dataset$drugs)
+summary(log(dataset$drugs))
+summary(dataset$age)
+summary(dataset$friends)
+table(dataset$gender)
+table(dataset$gradyear)
+```
+
+O próximo passo foi realizar a normalização dos dados. Utilizamos o mesmo método de normalização ensinado em aula.
+
+```{r}
+standardization <- function(x) {
+  return ((x - mean(x)) / sd(x))
+}
 ```
 
 ## Including Plots
