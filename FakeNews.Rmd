@@ -34,20 +34,27 @@ table(dataset$gender)
 table(dataset$gradyear)
 ```
 
-O próximo passo foi realizar a normalização dos dados. Utilizamos o mesmo método de normalização ensinado em aula.
+Os próximos passos da preparação foram: retirar os NA's, substituir os fatores do atributo "gender" para valores binários (fizemos isso para conseguirmos usar o kmeans futuramente),
+
+```{r}
+dataset <-  na.omit(dataset)
+dataset$gender <- ifelse(dataset$gender=='M', 1, 0)
+```
+
+O último passo da preparação dos dados foi realizar a normalização. Utilizamos o mesmo método de normalização ensinado em aula.
 
 ```{r}
 standardization <- function(x) {
   return ((x - mean(x)) / sd(x))
 }
+dataset_norm <- as.data.frame(lapply(dataset, standardization))
 ```
 
-## Including Plots
+## Criação do Modelo
 
-You can also embed plots, for example:
+Com a normalização feita, conseguimos criar o modelo usando o kmeans. 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+model <- kmeans(dataset_norm, centers = 4)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

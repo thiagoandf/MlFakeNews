@@ -15,10 +15,18 @@ table(dataset$gender)
 table(dataset$gradyear)
 
 standardization <- function(x) {
-  return ((x - mean(x)) / sd(x))
+  x2 <- x + 1
+  return (log10(x2))
 }
 
 dataset <-  na.omit(dataset)
 dataset$gender <- ifelse(dataset$gender=='M', 1, 0)
 dataset_norm <- as.data.frame(lapply(dataset, standardization))
 model <- kmeans(dataset_norm, centers = 4)
+
+
+interests <- dataset[5:40]
+interests_z <- as.data.frame(lapply(interests, scale))
+summary(interests_z[5:10])
+
+teen_clusters <- kmeans(interests_z, 5)
