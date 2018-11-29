@@ -100,8 +100,11 @@ abline(v = 0, lty =0)
 teen_clusters <- kmeans(interests_z, 5)
 ###
 
-#teen_clusters$centers
-#barplot(teen_clusters$centers, main = '')
+teen_clusters$centers
+plotAttributesOfCenters <- function(centers) {
+  plot(c)
+}
+barplot(teen_clusters$centers, main = '')
 
 ### Visualizando os clusters
 library(factoextra)
@@ -126,36 +129,19 @@ teens$cluster <- teen_clusters$cluster
 teens[1:5, c('cluster', 'gender', 'age', 'friends')]
 ###
 
-### Plotando valores dos atributos para cada cluster
-for(i in 1:5) {
-  plot(teen_clusters$centers[i,], 
-       xlab = 'Atributos',
-       main = c('Cluster ', i),
-       type = 'l'
-       )
-}
-### Os gráficos mostram que alguns clusters tem atributos característicos
-
-### Atributos de maior significância para os clusters 2 e 3
-sort(teen_clusters$centers[2,], decreasing = TRUE)
-sort(teen_clusters$centers[3,], decreasing = TRUE)
-### Atributos característicos:
-### Cluster 2 => hollister | abercrombie
-### Cluster 3 => marching | band
-
 ### Idade por cluster
 aggregate(data = teens, age ~ cluster, mean)
 boxplot(split(teens$age,teens$cluster),main='Idade média por cluster')
-### Não dá insights sifnificativos
+###
 
 ### Número de amigos por cluster
 aggregate(data = teens, friends ~ cluster, mean)
 boxplot(split(teens$friends,teens$cluster), outline=FALSE,main='Número médio de amigos por cluster')
-### Não dá insights sifnificativos
+###
 
 ### Proporção de mulheres por cluster
 aux <- aggregate(data = teens, female ~ cluster, mean)
 barplot(aux$female, names.arg = c('1','2','3','4','5'), main = 'Proporção de mulheres por cluster')
-### Não dá insights sifnificativos
-
 ###
+
+####
