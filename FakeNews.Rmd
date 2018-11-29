@@ -18,43 +18,142 @@ Nos foi introduzido, para a realização do trabalho, um dataset contendo dados 
 O primeiro foi realizar a leitura dos dados a partir do CSV e entender como estavam organizados.
 
 ```{r}
-dataset <- read.csv('snsdata.csv')
-table(dataset$bible)
-table(dataset$basketball)
-table(dataset$sexy)
-table(dataset$rock)
-table(dataset$dress)
-table(dataset$death)
-table(dataset$drugs)
-summary(dataset$drugs)
-summary(log(dataset$drugs))
-summary(dataset$age)
-summary(dataset$friends)
-table(dataset$gender)
-table(dataset$gradyear)
+teens <- read.csv('snsdata.csv')
+library(stats)
+nrow(teens)
 ```
 
-Os próximos passos da preparação foram: retirar os NA's, substituir os fatores do atributo "gender" para valores binários (fizemos isso para conseguirmos usar o kmeans futuramente),
+Os próximos passos da preparação foram retirar os NA's e substituir os fatores do atributo "gender" para valores binários (fizemos isso para conseguirmos usar o kmeans futuramente).
 
 ```{r}
-dataset <-  na.omit(dataset)
-dataset$gender <- ifelse(dataset$gender=='M', 1, 0)
+table(teens$gender, useNA = 'always')
+teens$female <- ifelse(teens$gender == "F" & !is.na(teens$gender),1,0)
+teens$no_gender <- ifelse(is.na(teens$gender),1,0)
 ```
 
-O último passo da preparação dos dados foi realizar a normalização. Utilizamos o mesmo método de normalização ensinado em aula.
+Com a preparação dos dados de gênero, conseguimos partimos para a idade dos estudantes. 
 
 ```{r}
-standardization <- function(x) {
-  return ((x - mean(x)) / sd(x))
-}
-dataset_norm <- as.data.frame(lapply(dataset, standardization))
+summary(teens$age)
 ```
 
-## Criação do Modelo
+A partir da análise do atributo usando o summary, foi possível concluir que, no dataset, temos "estudantes" desde 3 até 106 anos. Para conseguir balancear isso, filtramos os dados pela data.
 
-Com a normalização feita, conseguimos criar o modelo usando o kmeans. 
+Com uma breve pesquisa no Google, conseguimos descobrir as idades médias de estudantes de High School dos EUA e usamos esses dados para fazer o filtro:
+
+#### 9th grade => 13-14 anos
+#### 10th grade => 14-15 anos
+#### 11th grade => 15-16 anos
+#### 12th grade => 16-17 anos
+#### O estudante conclui o High School com idade entre 17 e 18 anos
+#### Foram desconsiderados estudantes atrasados ou adiantados
 
 ```{r}
-model <- kmeans(dataset_norm, centers = 4)
+teens$age <- ifelse(
+  teens$age >= 13 & teens$age < 18,
+  teens$age, 
+  NA
+)
+summary(teens$age)
 ```
 
+Depois desse passo, agrupamos os estudantes a partir da sua média de idade total e a média de idade por ano de graduação.
+
+```{r}
+ave_age <- mean(teens$age, na.rm = TRUE)
+ave_age
+
+ag <- aggregate(data = teens, age ~ gradyear, mean, na.rm = TRUE)
+ag
+```
+
+Fizemos então a remoção dos exemplos com valores de idade inadequados.
+
+```{r}
+nrow(teens)
+teens <- teens[!is.na(teens['age']),]
+rownames(teens) <- 1:nrow(teens)
+nrow(teens)
+```
+
+## Construção do Modelo
+
+Começamos a construção fazendo a normalização dos dados.
+
+```{r}
+interests <- teens[5:40]
+interests_z <- as.data.frame(lapply(interests, scale))
+summary(interests_z[5:10])
+```
+
+Depois desse ponto, aplicamos o COTOVELO.
+
+```{r}
+set.seed(123)
+models <- sapply(
+  1:15,
+  function(k){kmeans(interests_z, k, nstart=1)$tot.withinss}
+)
+plot(1:15, models, type='b', pch = 19, frame = FALSE, 
+     xlab='Number of clusters K',
+     ylab='Total within-clusters sum of squares')
+abline(v = 0, lty =0)
+```
+
+Geramos o modelo, com k = 5.
+
+```{r}
+teen_clusters <- kmeans(interests_z, 5)
+```
+
+E, por último, criamos a visualização dos dados.
+
+```{r}
+# install.packages("rlang")
+# install.packages("devtools")
+# devtools::install_github("kassambara/ggpubr")
+# devtools::install_github("kassambara/factoextra")
+library(factoextra)
+fviz_cluster(
+  teen_clusters,
+  interests_z,
+  geom = 'point',
+  show.clust.cent = TRUE
+)
+```
+
+## Análise dos resultados
+
+Iniciamos checando o tamanho dos clusters.
+
+```{r}
+teen_clusters$size
+```
+
+Identificação das cidades onde se encontram os estudantes.
+
+```{r}
+teens$cluster <- teen_clusters$cluster
+teens[1:5, c('cluster', 'gender', 'age', 'friends')]
+```
+
+Identificação das idades por cluster.
+
+```{r}
+aggregate(data = teens, age ~ cluster, mean)
+boxplot(split(teens$age,teens$cluster),main='Idade média por cluster')
+```
+
+Identificação do número de amigos por cluster
+
+```{r}
+aggregate(data = teens, friends ~ cluster, mean)
+boxplot(split(teens$friends,teens$cluster), outline=FALSE,main='Número médio de amigos por cluster')
+```
+
+E, por último, a identificação da quantidade de mulheres por cluster.
+
+```{r}
+aux <- aggregate(data = teens, female ~ cluster, mean)
+barplot(aux$female, names.arg = c('1','2','3','4','5'), main = 'Proporção de mulheres por cluster')
+```

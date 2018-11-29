@@ -100,6 +100,9 @@ abline(v = 0, lty =0)
 teen_clusters <- kmeans(interests_z, 5)
 ###
 
+#teen_clusters$centers
+#barplot(teen_clusters$centers, main = '')
+
 ### Visualizando os clusters
 library(factoextra)
 fviz_cluster(
